@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Quantcast_300x250</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://s0.2mdn.net/ads/studio/Enabler.js"></script>
+</head>
+
+<body>
+    <div id="container" class="container">
+        <div id="collapseWrapper" class="collapseWrapper">
+            <div id="collapseBg" class="collapseBg"></div>
+            <div id="collapseCopy1" class="collapseCopy1"></div>
+            
+            <div id="collapseBorder" style=" width: 100%; height: 100%; background: url(images/col_border.png) no-repeat; background-size: 300px 250px;"></div>
+            <div id="collapseCta" class="collapseCta"></div>
+        </div>
+        
+        <div id="expandWrapper" class="expandWrapper">
+            <div id="expandBg" class="expandBg"></div>
+            <div id="expandCopy1" class="expandCopy1 main-exit"></div>
+            <div id="expandBorder" class="main-exit" style=" width: 100%; height: 100%; background: url(images/exp_border.png) no-repeat; background-size: 600px 250px;"></div>
+            <div id="exContentWrapper" class="exContentWrapper">
+                <div id="exBorder" style="width: 352px; height: 170px; background: url(images/exp/videoBorder.png) no-repeat;"></div>
+                
+                <div id="expandTrailer" class="active">
+                    <video id="trailerVideo" class="trailerVideo">
+                        <source src="vid.mp4" type="video/mp4">
+                    </video>
+                    <div class="expandTrailerExit main-exit"></div>
+                    <div id="vidReplay" class="vidReplay"></div>
+                    <div id="vidState" class="vidState play">
+                        <div id="vPlay" class="vidState"></div>
+                        <div id="vPause" class="vidState"></div>
+                    </div>
+                    <div id="vidMute" class="vidMute unmute">
+                        <div id="vMute" class="vidMute"></div>
+                        <div id="vUnmute" class="vidMute"></div>
+                    </div>
+                </div>
+                <div id="expandPhotos" class="expandContent">
+                    <div id="expandPhotosItem" class="expandPhotosItem">
+                        <div id="photo1" class="photos active"></div>
+                        <div id="photo2" class="photos"></div>
+                        <div id="photo3" class="photos"></div>
+                    </div>
+                    <div class="expandPhotosExit main-exit"></div>
+                    <div id="photoLeft" class="photoControl"></div>
+                    <div id="photoRight" class="photoControl"></div>
+                </div>
+            </div>
+            
+            <div id="btnsWrapper" class="btnsWrapper">
+                <div class="btnsWrapperExit main-exit"></div>
+                <div id="btnTrailerWrapper" class="btns active">
+                    <div id="btnTrailer" class="btn"></div>
+                </div>
+                <div id="btnPhotosWrapper" class="btns">
+                    <div id="btnPhotos" class="btn"></div>
+                </div>
+                <div id="btnTicketsWrapper" class="btns">
+                    <div id="btnTickets" class="btn"></div>
+                </div>
+            </div>
+            
+            <div id="iconsWrapper" class="iconsWrapper">
+                <div class="main-exit iconsWrapperExit"></div>
+                <div id="iconFb" class="icons"></div>
+                <div id="iconT" class="icons"></div>
+                <div id="iconYt" class="icons"></div>
+                <div id="iconIg" class="icons"></div>
+            </div>
+            
+            <div id="closeBtn" class="closeBtn"></div>
+        </div>
+        
+        <div id="collapseHotSpot" class="collapseHotSpot hide"></div>
+<!--        <div id="guide" style="width: 100%; height: 100%; background: url(guide.png); background-size: 600px 250px; opacity: .5; "></div>-->
+    </div>
+    
+    <script>
+        var images, images2;
+        var loadedImage = 0, loadedImage2 = 0;
+        var first_expand = true;
+        var isExpanded = false;
+        var activeBtn = 'Trailer';
+        var video1 = document.getElementById('trailerVideo');
+        var number_of_expand = 0, current_expand;
+        var active_photo = 1, number_of_photos = 3, animating_photo = false;
+        
+        window.onload = function () {
+            if (Enabler.isInitialized) {
+                enablerInitHandler();
+            } else {
+                Enabler.addEventListener(studio.events.StudioEvent.INIT, enablerInitHandler);
+            }
+        }
+
+        function enablerInitHandler() {
+            if (Enabler.isInitialized) {
+                politeInit();
+            } else {
+                Enabler.addEventListener(studio.events.StudioEvent.INIT, politeInit);
+            }
+        }
+
+        function politeInit() {
+            if (Enabler.isPageLoaded()) {
+                preload();
+            } else {
+                Enabler.addEventListener(studio.events.StudioEvent.PAGE_LOADED, preload);
+            }
+        }
+
+        function preload() {
+            Enabler.addEventListener(studio.events.StudioEvent.EXPAND_START, expandedStartHandler);
+            Enabler.addEventListener(studio.events.StudioEvent.EXPAND_FINISH, expandFinishHandler);
+            Enabler.addEventListener(studio.events.StudioEvent.COLLAPSE_FINISH, collapseFinishHandler);
+            Enabler.addEventListener(studio.events.StudioEvent.COLLAPSE_START, collapseStartHandler);
+            
+            Enabler.loadModule(studio.module.ModuleId.VIDEO, function () {
+                studio.video.Reporter.attach('video_1', video1);
+            });
+            
+            Enabler.setExpandingPixelOffsets(0, 0, 600, 250);
+            Enabler.setStartExpanded(false);
+
+            images = [
+                "images/col/collapse_bg.jpg",
+                "images/col/collapse_copy1.png",
+                "images/col/collapse_cta.png"
+            ];
+
+            for (var i = 0; i < images.length; i++) {
+                imageObj = new Image();
+                imageObj.src = images[i];
+                imageObj.addEventListener("load", iLoad, false);
+            }
+        }
+        
+        function iLoad() {
+            loadedImage++;
+            
+            if (images.length == loadedImage) {
+                collapseBg.style.background = "url('" + images[0] + "') no-repeat";
+                collapseBg.style.backgroundSize = "300px 250px";
+                collapseCopy1.style.background = "url('" + images[1] + "') no-repeat";
+                collapseCopy1.style.backgroundSize = "300px 250px";
+                collapseCta.style.background = "url('" + images[2] + "') no-repeat";
+                collapseCta.style.backgroundSize = "300px 250px";
+             
+                init();
+            }
+        }
+        
+        function preload2() {
+            images2 = [
+                "images/exp/expand_bg.jpg",
+                "images/exp/expand_copy1.png",
+                "images/exp/vid_replay.png",
+                "images/exp/vid_play.png",
+                "images/exp/vid_pause.png",
+                "images/exp/vid_mute.png",
+                "images/exp/vid_unmute.png",
+                "images/exp/photo_1.jpg",
+                "images/exp/photo_2.jpg",
+                "images/exp/photo_3.jpg",
+                "images/exp/photo_left.png",
+                "images/exp/photo_right.png",
+                "images/exp/btn_trailer.png",
+                "images/exp/btn_photos.png",
+                "images/exp/btn_tickets.png",
+                "images/exp/icon_fb.png",
+                "images/exp/icon_t.png",
+                "images/exp/icon_yt.png",
+                "images/exp/icon_ig.png",
+                "images/exp/close.png"
+            ];
+
+            for (var i = 0; i < images2.length; i++) {
+                imageObj = new Image();
+                imageObj.src = images2[i];
+                imageObj.addEventListener("load", iLoad2, false);
+            }
+        }
+        
+        function iLoad2() {
+            loadedImage2++;
+            
+            if (images2.length == loadedImage2) {
+                
+                  expandBg.style.background = "url('" + images2[0] + "') no-repeat";
+                  expandBg.style.backgroundSize = "600px 250px";
+               expandCopy1.style.background = "url('" + images2[1] + "') no-repeat";
+               expandCopy1.style.backgroundSize = "600px 250px";
+                 vidReplay.style.background = "url('" + images2[2] + "') no-repeat";
+                     vPlay.style.background = "url('" + images2[3] + "') no-repeat";
+                    vPause.style.background = "url('" + images2[4] + "') no-repeat";
+                     vMute.style.background = "url('" + images2[5] + "') no-repeat";
+                   vUnmute.style.background = "url('" + images2[6] + "') no-repeat";
+                    photo1.style.background = "url('" + images2[7] + "') no-repeat";
+                    photo2.style.background = "url('" + images2[8] + "') no-repeat";
+                    photo3.style.background = "url('" + images2[9] + "') no-repeat";
+                 photoLeft.style.background = "url('" + images2[10] + "') no-repeat";
+                photoRight.style.background = "url('" + images2[11] + "') no-repeat";
+                btnTrailer.style.background = "url('" + images2[12] + "') no-repeat";
+                btnTrailer.style.backgroundSize = "117px 29px";
+                 btnPhotos.style.background = "url('" + images2[13] + "') no-repeat";
+                btnPhotos.style.backgroundSize = "117px 29px";
+                btnTickets.style.background = "url('" + images2[14] + "') no-repeat";
+                btnTickets.style.backgroundSize = "117px 29px";
+                    iconFb.style.background = "url('" + images2[15] + "') no-repeat";
+                iconFb.style.backgroundSize = "21px 21px";
+                     iconT.style.background = "url('" + images2[16] + "') no-repeat";
+                iconT.style.backgroundSize = "21px 21px";
+                    iconYt.style.background = "url('" + images2[17] + "') no-repeat";
+                iconYt.style.backgroundSize = "21px 21px";
+                    iconIg.style.background = "url('" + images2[18] + "') no-repeat";
+                iconIg.style.backgroundSize = "21px 21px";
+                  closeBtn.style.background = "url('" + images2[19] + "') no-repeat";
+                  closeBtn.style.backgroundSize = "27px 27px";
+                first_expand = false;
+                
+                expandAddEvent();
+                showExpand();
+            }
+        }
+        
+        function init() {
+            container.style.visibility = "visible";
+            setTimeout(scene1, 1000);
+        }
+        
+        function scene1() {
+            collapseCopy1.classList.add('collapseCopy1-anim');
+            collapseCta.classList.add('collapseCta-anim');
+            setTimeout(collapseAddEvent, 2000);
+        }
+        
+        function startCollapse() {
+            if(isExpanded) Enabler.requestCollapse();  
+        }
+
+        function collapseStartHandler() {
+            showCollapse();
+            Enabler.finishCollapse();
+        }
+
+        function collapseFinishHandler() {
+            isExpanded = false;
+        }
+        
+        function showCollapse() {
+            if(activeBtn == 'Trailer' && !video1.paused) {
+                Enabler.counter('Video Stops');
+                video1.pause();
+                video1.currentTime = 0;
+            }
+            
+            expandWrapper.classList.remove('show');
+            collapseCopy1.classList.add('collapseCopy1-anim');
+            collapseCta.classList.add('collapseCta-anim');
+
+            expandCopy1.classList.remove('show'); 
+            iconsWrapper.classList.remove('show'); 
+            exContentWrapper.classList.remove('show'); 
+            btnsWrapper.classList.remove('show');
+
+            var rb = document.getElementById('btn' + activeBtn + 'Wrapper');
+            var rc = document.getElementById('expand' + activeBtn);
+            var db = document.getElementById('btnTrailerWrapper');
+            var dc = document.getElementById('expandTrailer');
+
+            rb.classList.remove('active');
+            rc.classList.remove('active');
+            db.classList.add('active');
+            dc.classList.add('active');
+            
+            activeBtn = 'Trailer';
+            
+            setTimeout(function() { collapseHotSpot.classList.remove('hide'); }, 2000);
+        }
+        
+        function collapseAddEvent() {
+            collapseHotSpot.classList.remove('hide');
+            collapseHotSpot.addEventListener('mouseover', startExpand);
+        }
+        
+        function startExpand() {
+            if(!isExpanded) Enabler.requestExpand();  
+        }
+
+        function expandedStartHandler() {
+            collapseHotSpot.classList.add('hide');
+            Enabler.finishExpand();
+        }
+        
+        function expandFinishHandler() {
+            isExpanded = true;
+            
+            if(first_expand) {
+                preload2();
+            } else {
+                showExpand();
+            }
+        }
+        
+        function showExpand() {
+            number_of_expand++;
+            expandWrapper.classList.add('show');
+            collapseCopy1.classList.remove('collapseCopy1-anim');
+            collapseCta.classList.remove('collapseCta-anim');
+            
+            setTimeout(function() {
+                
+                expandCopy1.classList.add('show'); 
+                iconsWrapper.classList.add('show'); 
+                exContentWrapper.classList.add('show'); 
+                btnsWrapper.classList.add('show');
+                
+                startVideo();
+                
+            }, 500);
+        }
+        
+        function expandAddEvent() {
+            closeBtn.addEventListener('click', closeExpand);
+
+            video1.addEventListener('ended', videoStop);
+
+            vidReplay.addEventListener('click', function() {
+                Enabler.counter('Video Replay');
+                startVideo();
+            });
+            vidState.addEventListener('click', videoState);
+            vidMute.addEventListener('click', videoMute);
+
+            photoLeft.addEventListener('click', function() {
+                if(!animating_photo) {
+                    carouselPhotos('left');
+                }
+            });
+            photoRight.addEventListener('click', function() {
+                if(!animating_photo) {
+                    carouselPhotos('right');
+                }
+            });
+
+            btnTrailerWrapper.addEventListener('click', function() { changeContent('Trailer') });
+            btnPhotosWrapper.addEventListener('click', function() { changeContent('Tickets') });
+            btnTicketsWrapper.addEventListener('click', function() { changeContent('Tickets') });
+                
+            var me = document.getElementsByClassName('main-exit');
+            for(var i = 0; i < me.length; i++) {
+                me[i].addEventListener('click', mainExit);
+            }
+            
+            iconFb.addEventListener('click', facebookExit);
+            iconT.addEventListener('click', twitterExit);
+            iconYt.addEventListener('click', youTubeExit);
+            iconIg.addEventListener('click', instagramExit);
+        }
+        
+        function changeContent(btn) {
+                
+            if(btn != activeBtn) {
+                if(btn != 'Trailer' && activeBtn == 'Trailer') {
+                    Enabler.counter('Video Stops');
+                    video1.pause();
+                    video1.currentTime = 0;
+                }
+                
+                restartCarousel();
+
+                if(btn != 'Tickets') {
+                    var ab = document.getElementById('btn' + activeBtn + 'Wrapper');
+                    var b = document.getElementById('btn' + btn + 'Wrapper');
+
+                    var ac = document.getElementById('expand' + activeBtn);
+                    var c = document.getElementById('expand' + btn);
+
+                    ab.classList.remove('active');
+                    b.classList.add('active');
+
+                    ac.classList.remove('active');
+                    c.classList.add('active');
+                }
+
+                switch(btn) {
+                    case 'Trailer':
+                        startVideo();
+
+                        activeBtn = 'Trailer';
+                        break;
+                    case 'Photos':
+                        setTimeout(function() { carouselPhotos('right'); }, 10);
+                        
+                        activeBtn = 'Photos';
+                        break;
+                    default:
+                        ticketsExit();
+                }
+                
+            }
+        }
+        
+        function startVideo() {
+            vidReplay.style.display = 'none';
+            
+            vidState.style.display = 'block';
+            vidState.classList.remove('pause');
+            vidState.classList.add('play');
+            
+            vidMute.style.display = 'block';
+            vidMute.classList.remove('mute');
+            vidMute.classList.add('unmute');
+            video1.muted = false;
+            
+            video1.currentTime = 0;
+            video1.play();
+        }
+
+        function videoState() {
+            if(video1.paused) {
+                vidState.classList.remove('pause');
+                vidState.classList.add('play');
+                video1.play();
+            } else {
+                vidState.classList.remove('play');
+                vidState.classList.add('pause');
+                video1.pause();
+            }
+        }
+
+        function videoMute() {
+            if(video1.muted) {
+                vidMute.classList.remove('mute');
+                vidMute.classList.add('unmute');
+                video1.muted = false;
+            } else {
+                vidMute.classList.remove('unmute');
+                vidMute.classList.add('mute');
+                video1.muted = true;
+            }
+        }
+        
+        function videoStop() {
+            vidReplay.style.display = 'block';
+            vidState.style.display = 'none';
+            vidMute.style.display = 'none';
+
+            video1.pause();
+        }
+        
+        function carouselPhotos(dir) {
+
+            animating_photo = true;
+            var cp = document.getElementById('photo' + active_photo);
+            var np;
+            
+            if(dir == 'left') {
+                active_photo--;
+                np = document.getElementById('photo' + active_photo);
+                
+                if(!np) {
+                    np = document.getElementById('photo' + number_of_photos);
+                    active_photo = number_of_photos;
+                }
+                
+            } else {
+                active_photo++;
+                np = document.getElementById('photo' + active_photo);
+                    
+                if(!np) {
+                    np = document.getElementById('photo' + 1);
+                    active_photo = 1;
+                }
+            }
+            
+            np.classList.add('front', 'active');
+            setTimeout(function() {
+                cp.classList.remove('active');
+                np.classList.remove('front');
+                animating_photo = false;
+            }, 1000);
+        }
+        
+        function restartCarousel() {
+            animating_photo = false;
+            
+            var ap = document.getElementById('photo' + active_photo);
+            ap.classList.remove('front', 'active');
+            
+            photo1.classList.add('active');
+            active_photo = 1;
+        }
+        
+        function closeExpand() {
+            Enabler.reportManualClose();
+            startCollapse();
+        }
+        
+        function mainExit() {
+            Enabler.exit('Main Exit', '');
+            startCollapse();
+        }
+        
+        function ticketsExit() {
+            Enabler.exit('Tickets Exit', '');
+            startCollapse();
+        }
+        
+        function facebookExit() {
+            Enabler.exit('Facebook Exit', '');
+            startCollapse();
+        }
+        
+        function twitterExit() {
+            Enabler.exit('Twitter Exit', '');   
+            startCollapse();
+        }
+        
+        function youTubeExit() {
+            Enabler.exit('Youtube Exit', '');
+            startCollapse();
+        }
+        
+        function instagramExit() {
+            Enabler.exit('Instagram Exit', '');
+            startCollapse();
+        }
+    </script>
+
+</body>
+
+</html>
